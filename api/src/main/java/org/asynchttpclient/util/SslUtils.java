@@ -33,12 +33,12 @@ public class SslUtils {
         return SingletonHolder.instance;
     }
 
-    public SSLEngine getSSLEngine() throws GeneralSecurityException, IOException {
+    public SSLEngine getSSLEngine(String peerHost, int peerPort) throws GeneralSecurityException, IOException {
         SSLEngine engine = null;
 
         SSLContext context = getSSLContext();
         if (context != null) {
-            engine = context.createSSLEngine();
+            engine = context.createSSLEngine(peerHost, peerPort);
             engine.setUseClientMode(true);
         }
 
