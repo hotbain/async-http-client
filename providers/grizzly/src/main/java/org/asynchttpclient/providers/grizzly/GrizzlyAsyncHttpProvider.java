@@ -29,6 +29,7 @@ import org.asynchttpclient.providers.grizzly.filters.AsyncHttpClientEventFilter;
 import org.asynchttpclient.providers.grizzly.filters.AsyncHttpClientFilter;
 import org.asynchttpclient.providers.grizzly.filters.AsyncSpdyClientEventFilter;
 import org.asynchttpclient.providers.grizzly.filters.ClientEncodingFilter;
+import org.asynchttpclient.providers.grizzly.filters.HostPortAwareSSLEngineConfigurator;
 import org.asynchttpclient.providers.grizzly.filters.SwitchingSSLFilter;
 import org.asynchttpclient.util.AsyncHttpProviderUtils;
 import org.asynchttpclient.util.ProxyUtils;
@@ -257,7 +258,7 @@ public class GrizzlyAsyncHttpProvider implements AsyncHttpProvider {
                 throw new IllegalStateException(e);
             }
         }
-        final SSLEngineConfigurator configurator = new SSLEngineConfigurator(context, true, false, false);
+        final SSLEngineConfigurator configurator = new HostPortAwareSSLEngineConfigurator(context, true, false, false);
         final SwitchingSSLFilter filter = new SwitchingSSLFilter(configurator);
         secure.add(filter);
         GrizzlyAsyncHttpProviderConfig providerConfig = (GrizzlyAsyncHttpProviderConfig) clientConfig.getAsyncHttpProviderConfig();

@@ -14,6 +14,7 @@
 package org.asynchttpclient.providers.grizzly.filters;
 
 import org.asynchttpclient.providers.grizzly.filters.events.SSLSwitchingEvent;
+import org.glassfish.grizzly.CompletionHandler;
 import org.glassfish.grizzly.Connection;
 import org.glassfish.grizzly.EmptyCompletionHandler;
 import org.glassfish.grizzly.Grizzly;
@@ -23,13 +24,16 @@ import org.glassfish.grizzly.filterchain.FilterChain;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
 import org.glassfish.grizzly.filterchain.FilterChainEvent;
 import org.glassfish.grizzly.filterchain.NextAction;
+import org.glassfish.grizzly.ssl.SSLConnectionContext;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.grizzly.ssl.SSLFilter;
+import org.glassfish.grizzly.ssl.SSLUtils;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLHandshakeException;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 /**
  * SSL Filter that may be present within the FilterChain and may be
@@ -141,6 +145,28 @@ public final class SwitchingSSLFilter extends SSLFilter {
 
     public static Throwable getHandshakeError(final Connection c) {
         return HANDSHAKE_ERROR.remove(c);
+    }
+
+    @Override
+    protected void handshake(final Connection<?> connection,
+            final CompletionHandler<SSLEngine> completionHandler,
+            final Object dstAddress, SSLEngineConfigurator sslEngineConfigurator,
+            final FilterChainContext context) throws IOException {
+        
+        SSLEngine sslEngine = SSLUtils.getSSLEngine(connection);
+        if (sslEngine == null) {
+            InetSocketAddress peerAddress = (InetSocketAddress) connection.getPeerAddress();
+            String host = peerAddress.getHostString();
+            int port = peerAddress.getPort();
+            sslEngine = ((HostPortAwareSSLEngineConfigurator) sslEngineConfigurator)
+                    .createSSLEngine(host, port);
+            final SSLConnectionContext sslCtx = new SSLConnectionContext(connection);
+            sslCtx.configure(sslEngine);
+            sslCtx.attach();
+        }
+        
+        super.handshake(connection, completionHandler, dstAddress, sslEngineConfigurator,
+                context);
     }
 
     // --------------------------------------------------------- Private Methods
